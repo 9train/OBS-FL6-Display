@@ -1,0 +1,124 @@
+/* public/styles.css */
+
+/* ===== Theme vars ===== */
+:root {
+  /* your palette */
+  --bg: #0b1020;
+  --panel: #10162b;
+  --ink: #cfe0ff;
+  --accent: #9fb2de; /* highlight fill/stroke */
+  --lit: #5ec4ff;    /* glow */
+
+  /* aliases / extras from original */
+  --fg: var(--ink);          /* text color alias */
+  --panel-border: #33406b;   /* panel outline */
+}
+
+/* ===== Base page ===== */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--fg);
+  font: 14px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* For OBS compositing */
+body.transparent { background: transparent; }
+
+/* ===== UI toolbar (Fit / Fill / Toggle BG / status) ===== */
+#ui {
+  position: fixed;
+  inset: 12px 12px auto 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  z-index: 10;
+  color: #9fb2de;
+  pointer-events: none; /* let clicks pass through except on buttons */
+}
+#ui .left, #ui .right { pointer-events: auto; }
+
+button {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  color: var(--fg);
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: filter .12s ease, transform .04s ease;
+}
+button:hover { filter: brightness(1.12); }
+button:active { transform: translateY(1px); }
+
+/* ===== Stage / SVG container ===== */
+#boardHost {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+/* Default “fit”: keep aspect, fit inside window */
+#boardHost svg {
+  width: 90vw;
+  height: auto;
+  max-height: 90vh;
+  max-width: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* “Fill” mode: cover the whole frame (good for OBS crops) */
+#boardHost.fill svg {
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+}
+
+/* ===== Lighting / hit targets ===== */
+
+/* Strong lighting: force accent color and glow on the lit element AND its children */
+.lit, .lit * {
+  fill: var(--accent) !important;
+  stroke: var(--accent) !important;
+  fill-opacity: 1 !important;
+  stroke-opacity: 1 !important;
+  filter: drop-shadow(0 0 6px var(--lit)) drop-shadow(0 0 14px var(--lit));
+  transition: fill .08s linear, stroke .08s linear, filter .08s linear;
+}
+
+/* Optional: visible hit areas if you use them */
+.hit {
+  fill: rgba(27, 33, 51, 0.6);
+  stroke: var(--panel-border);
+  stroke-width: 2;
+}
+
+/* ===== Motion / transitions ===== */
+
+/* Smooth rotation for knobs (your 360° logic uses CSS transforms) */
+[id^="trim_"],
+[id^="hi_"],
+[id^="mid_"],
+[id^="low_"],
+[id^="filter_"],
+[id^="knob_"] {
+  transition: transform 90ms linear;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* Smooth position for fader caps / tempo sliders / xfader */
+[id^="slider_"],
+#xfader,
+#xfader_slider,
+[id*="TEMPO"] {
+  transition: x .06s linear, y .06s linear;
+}
+
+/* ===== Utility ===== */
+.muted { opacity: 0.5; }
+.hidden { display: none !important; }

@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>FLX Visualizer (OBS)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="./styles.css" />
+  <!-- optional: silence favicon 404 -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Crect width='64' height='64' rx='12' fill='%231b2133'/%3E%3Ccircle cx='32' cy='32' r='18' fill='%236ea8fe'/%3E%3C/svg%3E">
+</head>
+<body>
+  <div id="ui">
+    <div class="left">
+      <button id="fit">Fit</button>
+      <button id="fill">Fill</button>
+      <button id="toggleBG">Toggle BG</button>
+    </div>
+    <div class="right" style="display:flex;gap:12px;align-items:center;">
+      <span id="status">WS: ⏳</span>
+      <span id="midiStatus">MIDI: …</span> <!-- new -->
+    </div>
+  </div>
+  <section id="boardHost" aria-label="Controller visual"></section>
+
+  <script type="module">
+    import { initBoard, consumeInfo } from '/src/board.js';
+    import { connectWS } from '/src/ws.js';
+    import { initWebMIDI } from '/src/midi.js';
+
+    // 1) load SVG
+    await initBoard({ hostId: 'boardHost' });
+
+    // 2) expose consumeInfo so console tools can call it
+    window.consumeInfo = consumeInfo;
+
+    // 3) robust WS URL (matches WSPORT)
+    const WS_PORT = Number(window.__WSPORT__ || 8787);
+    const WS_URL =
+      (location.protocol === 'https:' ? 'wss://' : 'ws://') +
+      location.hostname + ':' + WS_PORT;
+
+    // 4) WebSocket stream → board
+    connectWS(WS_URL,
+      (info) => consumeInfo(info),
+      (st) => { document.getElementById('status').textContent = 'WS: ' + st; }
+    );
+
+    // 5) WebMIDI (new API takes an options object) → board
+    initWebMIDI({
+      preferredInput: 'DDJ-FLX6',                   // or leave blank to auto-pick
+      onInfo: (info) => consumeInfo(info),
+      onStatus: (s) => { document.getElementById('midiStatus').textContent = 'MIDI: ' + s; }
+    });
+
+    // UI controls
+    const host = document.getElementById('boardHost');
+    document.getElementById('fit').onclick  = () => host.classList.remove('fill');
+    document.getElementById('fill').onclick = () => host.classList.add('fill');
+    document.getElementById('toggleBG').onclick = () => document.body.classList.toggle('transparent');
+  </script>
+</body>
+</html>
